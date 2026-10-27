@@ -1,0 +1,48 @@
+name: Build LinkStar
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'  # 当推送以 v 开头的标签（如 v1.0.0）时也会触发
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:  # 允许你在 GitHub 网页端手动点击按钮触发编译
+
+jobs:
+  build:
+    name: Build for Linux arm64 (musl)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'  # 可根据你的项目实际需要的 Go 版本调整
+
+      - name: Build binary
+        env:
+          CGO_ENABLED: 0
+          GOOS: linux
+          GOARCH: arm64
+        run: |
+          echo "Building LinkStar for linux/arm64..."
+          go build -ldflags="-s -w" -o linkstar-linux-arm64 .
+          
+      - name: Verify binary
+        run: |
+          file linkstar-linux-arm64
+          ls -lh linkstar-linux-arm64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linkstar-linux-arm64
+          path: linkstar-linux-arm64
